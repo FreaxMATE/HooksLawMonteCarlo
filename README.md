@@ -1,87 +1,90 @@
-# Entropic Spring — Rediscover Hooke’s Law with Monte Carlo
+# Monte Carlo Simulation of Hooke's Law in Rubber Bands
 
-A compact Monte Carlo study of a 1D “rubber band” that reproduces the entropic form of Hooke’s law. We compare three strategies — unbiased sampling, Boltzmann reweighting, and direct biased sampling — and validate against the analytic distribution.
+A comprehensive Monte Carlo simulation framework that models rubber band behavior using statistical mechanics, demonstrating Hooke's law emergence from microscopic link configurations and thermal fluctuations.
 
 ## 🌟 Overview
 
-This project provides an end-to-end workflow to:
-- Model a polymer as N independent links pointing left/right with step size a
-- Derive and sample the length distribution P(L) with/without an external force f
-- Compare Monte Carlo histograms to the analytic result P(L|f) ∝ Ω(N,n) e^{β f L}
-- Explore two ensemble strategies under force:
-   - Reweighting: sample at f=0, weight by e^{β f L}
-   - Direct sampling: draw links with p(right)=½[1+tanh(β f a)]
-- Demonstrate the small-force limit ⟨L⟩ ≈ (N a² / k_B T) f (entropic Hooke’s law)
+This project provides an end-to-end Monte Carlo simulation to:
+- Model rubber bands as collections of N discrete links with random orientations
+- Simulate length distributions under zero force using statistical sampling
+- Apply Boltzmann reweighting to study systems under external forces
+- Implement importance sampling with biased probabilities for high-force regimes
+- Validate Hooke's law emergence from microscopic statistical mechanics
+- Compare simulation results with analytical predictions
 
-Generated plots are written to the `out/` folder for quick inspection.
+Outputs (plots and analysis) are written to the `out/` directory.
 
 ## 📁 Project Structure
 
 ```
 HooksLawMonteCarlo/
 ├── src/
-│   ├── montecarlospring.py            # Unbiased sampling at f=0; compare to binomial P(L)
-│   ├── montecarlospring2.py           # Reweighting approach for several forces; P(L|f)
-│   ├── montecarlospring2_reweigh.py   # Reweighting scan + μ_eff vs force
-│   └── montecarlospring3.py           # Direct biased sampling; ⟨L⟩(f) and Hooke limit
-├── out/                               # Auto-created; all plots saved here
-│   ├── histogram_v1.png               # Example: P(L) at f=0 (MC vs theory)
-│   ├── weighted_histogram_2_large_force.png
-│   ├── weighted_histogram_2_large_force_reweigh.png
-│   ├── weighted_histogram_2_mu_eff.png
-│   ├── histogram_3.png
-│   └── av_length_by_force3.png
-├── README.md                          # This file
-├── requirements.txt                   # Minimal Python dependencies
-├── flake.nix                          # Nix dev shell (optional)
-├── flake.lock                         # Nix lockfile
-└── .vscode/                           # Optional editor settings
+│   ├── montecarlospring.py                 # Task 1: Zero-force simulation
+│   ├── montecarlospring2.py                # Task 2: Boltzmann reweighting (small forces)
+│   ├── montecarlospring2_large_forces.py   # Task 2: Large force analysis
+│   ├── montecarlospring2_mueff.py          # Task 2: Effective sample size analysis
+│   └── montecarlospring3.py                # Task 3: Importance sampling with biased probs
+├── report.md                               # Detailed analysis and results
+├── README.md                               # This file
+├── requirements.txt                        # Python dependencies
+├── flake.nix                               # Nix development environment (optional)
+├── flake.lock                              # Nix lockfile
+└── LICENSE                                 # Project license
 ```
 
 ## 🚀 Features
 
-- Simple polymer model (N links, each left/right) with length L = a(2n−N)
-- Analytic probability with/without force using Ω(N,n)=C(N,n)
-- Monte Carlo engines:
-   - Unbiased sampling at f=0 (binomial)
-   - Boltzmann reweighting to emulate finite f
-   - Direct biased sampling using p(right)=½[1+tanh(β f a)]
-- Plots and diagnostics:
-   - Length histograms (MC vs analytic) and ratio panels
-   - Reweighting stability via effective sample size μ_eff
-   - ⟨L⟩ vs f with small‑force (Hooke) line and exact tanh curve
+### Core Simulation Components
+- **Link Class**: Represents individual rubber band segments with binary orientation (left/right)
+- **RubberBand Class**: Collection of N links with configurable properties
+- **Statistical Sampling**: Monte Carlo generation of microstates
+- **Boltzmann Weighting**: Reweighting scheme for force application
+- **Importance Sampling**: Biased probability sampling for efficient exploration
+
+### Analysis & Visualization
+- Length distribution histograms with theory comparison
+- Chi-squared goodness-of-fit testing
+- Force-dependent average length curves
+- Effective sample size (μ_eff) analysis
+- ROC-style ratio plots (MC/Theory)
+- Validation of Hooke's law in linear regime
+
+### Three Simulation Regimes
+1. **Zero Force** (montecarlospring.py): Pure statistical sampling, binomial distribution
+2. **Small Forces** (montecarlospring2.py): Boltzmann reweighting approach
+3. **General Forces** (montecarlospring3.py): Importance sampling with modified probabilities
 
 ## 🛠️ Dependencies
 
-Python packages used by the scripts:
-- numpy
-- matplotlib
+Python packages:
+- numpy (numerical computations)
+- matplotlib (visualization)
 
-An optional Nix flake is provided for a fully reproducible dev shell.
+Optional: A Nix flake is provided for reproducible development environments.
 
 ## 💻 Setup & Installation
 
-### Option 1: Python venv (Recommended)
+### Option 1: Manual Setup (pip)
 
 ```fish
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate.fish
 pip install -r requirements.txt
 ```
 
-Deactivate with `deactivate` when done. For Bash/zsh users: `source .venv/bin/activate`.
+For other shells:
+- Bash/zsh: `source .venv/bin/activate`
+- Windows (cmd): `.venv\Scripts\activate`
 
 ### Option 2: Conda (optional)
 
 ```fish
-conda create -n entropic-spring python=3.12
-conda activate entropic-spring
+conda create -n hooke-mc python=3.12
+conda activate hooke-mc
 pip install -r requirements.txt
 ```
 
 ### Option 3: Nix (Advanced/Optional)
-
-The repo includes a Nix flake that provides a development shell with the core Python packages:
 
 ```fish
 nix develop
@@ -89,84 +92,195 @@ nix develop
 
 ## 🎯 Usage
 
-Ensure your environment is activated (venv, conda, or nix shell), then run any script below.
+### Task 1: Zero-Force Simulation
 
-1) Unbiased sampling at f=0: compare MC P(L) to analytic binomial
+Simulates rubber bands with no external force, demonstrating binomial length distribution:
 
 ```fish
 python src/montecarlospring.py
 ```
 
-Outputs: `out/histogram_v1.png`
+**Key parameters:**
+- `N = 100` — number of links per rubber band
+- `n_bands = 10000` — number of rubber bands in ensemble
+- `a = 1` — link length
 
-2) Reweighting from f=0 to finite f values; compare to analytic P(L|f)
+**Output:** `out/histogram_v1.png` showing MC vs analytical distribution
+
+### Task 2: Force Application via Reweighting
+
+Applies external forces using Boltzmann reweighting:
 
 ```fish
+# Small forces (f = 0.01, 0.05, 0.1)
 python src/montecarlospring2.py
+
+# Large forces (f = 0.1, 0.5, 1.0)
+python src/montecarlospring2_large_forces.py
+
+# Effective sample size analysis
+python src/montecarlospring2_mueff.py
 ```
 
-Outputs: `out/weighted_histogram_2_large_force.png`
+**Output:** 
+- `out/weighted_histogram_2.png` — small force regime
+- `out/weighted_histogram_2_large_forces.png` — reweighting breakdown
+- `out/weighted_histogram_2_mu_eff.png` — efficiency analysis
 
-3) Reweighting scan + effective sample size μ_eff vs f
+### Task 3: Importance Sampling
 
-```fish
-python src/montecarlospring2_reweigh.py
-```
-
-Outputs: `out/weighted_histogram_2_large_force_reweigh.png`, `out/weighted_histogram_2_mu_eff.png`
-
-4) Direct biased sampling at finite f; ⟨L⟩(f), Hooke’s-law limit, and exact curve
+Implements biased sampling for efficient simulation across all force ranges:
 
 ```fish
 python src/montecarlospring3.py
 ```
 
-Outputs: `out/histogram_3.png`, `out/av_length_by_force3.png`
+**Key features:**
+- Biased link probabilities: `p_right = 0.5 * (1 + tanh(β·f·a))`
+- Force sweep from 0.001 to 5.0
+- Linear fit in Hooke's law regime
+- Comparison with analytical expressions
 
-Key parameters are defined inside each script:
-- Polymer size: `N` (default 100), step size `a` (default 1)
-- Thermodynamics: `kB=1`, `T=1` so β=1/(k_B T)=1 by default
-- Number of bands (toys): `n_bands` (default 10,000)
-- Force scan: see the `forces` arrays inside scripts 2 and 3
+**Output:**
+- `out/histogram_3.png` — length distributions at various forces
+- `out/av_length_by_force3.png` — average length vs force with linear fit
 
-## 📊 Sample Output
+## 📊 Physical Model
 
-Example figures produced by the scripts in this repo:
+### Microscopic Description
 
-![P(L) at f=0: MC vs analytic](out/histogram_v1.png)
+A rubber band consists of N links of length a, each pointing left (0) or right (1):
 
-![Reweighting: P(L|f) for multiple forces](out/weighted_histogram_2_large_force.png)
+$$L = a(2n - N)$$
 
-![Reweighting scan: μ_eff vs force](out/weighted_histogram_2_mu_eff.png)
+where n is the number of right-pointing links.
 
-![Direct biased sampling: P(L|f)](out/histogram_3.png)
+### Statistical Mechanics
 
-![Average length vs force: MC, small‑force line, exact tanh](out/av_length_by_force3.png)
+**Zero force:** Each microstate has equal probability (p = 1/2^N)
 
-If these images are not present yet, run the scripts to generate them.
+**With force f:** Boltzmann distribution applies:
 
-## 🧪 Model and Theory (brief)
+$$P(L) = \frac{\Omega(L) \cdot e^{\beta f L}}{Z}$$
 
-- Microstate: N independent links, each dir ∈ {left,right}. Length for n right links: L=a(2n−N).
-- Multiplicity: Ω(N,n)=C(N,n). At f=0: P(L)∝Ω(N,n). With force f: P(L|f)∝Ω(N,n) e^{β f L}.
-- Direct sampling under force: p(right)=½[1+tanh(β f a)].
-- Small‑force limit: ⟨L⟩≈(N a² β) f = (N a² / k_B T) f — an entropic Hooke’s law with k_eff = k_B T / (N a²).
+where:
+- Ω(L) = C(N,n) is the degeneracy (binomial coefficient)
+- β = 1/(k_B·T) is the inverse temperature
+- Z is the partition function
 
-## ⚙️ Tips & Notes
+### Hooke's Law Emergence
 
-- Reproducibility: NumPy RNG is seeded as `np.random.default_rng(12345)`.
-- Reweighting reliability: watch μ_eff — it drops when target f is far from the proposal (f=0) ensemble.
-- CPU runs are fast; no GPU is needed.
-- Feel free to tweak N, a, and force grids to explore different regimes.
+In the small-force limit (β·f·a << 1):
+
+$$\langle L \rangle \approx \frac{N a^2}{k_B T} f$$
+
+This is Hooke's law with effective spring constant k = k_B·T/(N·a²).
+
+For arbitrary forces, the exact result is:
+
+$$\langle L \rangle = N \cdot a \cdot \tanh(\beta f a)$$
+
+## 📈 Results (Summary)
+
+### Task 1: Zero-Force Validation
+- Excellent agreement with theory (χ²/N ≈ 0.65)
+- Binomial distribution clearly observed
+- Larger deviations at distribution tails due to finite sampling
+
+![Zero-force length distribution](out/histogram_v1.png)
+
+### Task 2: Reweighting Analysis
+- Works well for forces f < 0.2
+- Breaks down for large forces (μ_eff drops dramatically)
+- Effective sample size becomes insufficient at high forces
+
+![Small forces with Boltzmann reweighting](out/weighted_histogram_2.png)
+
+![Large forces showing reweighting breakdown](out/weighted_histogram_2_large_forces.png)
+
+![Effective sample size vs force](out/weighted_histogram_2_mu_eff.png)
+
+### Task 3: Importance Sampling Success
+- Linear regime validated with fitted slope ≈ 95.5 (theory: 100)
+- Excellent agreement with `tanh(βfa)` prediction across all forces
+- Efficient sampling even in high-force regime
+
+![Average length vs force with linear fit and theory](out/av_length_by_force3.png)
+
+Detailed plots and analysis are available in `report.md` and the `out/` directory.
+
+## 🧪 Implementation Details
+
+### Random Number Generation
+- Reproducible seeds (default: 12345)
+- NumPy's default_rng for modern PRNG
+
+### Numerical Methods
+- Histogram binning with unit-width bins
+- Error propagation: σ = √counts / Σcounts
+- Chi-squared testing for goodness-of-fit
+- Linear regression for Hooke's law validation
+
+### Computational Efficiency
+- Vectorized operations with NumPy
+- Typical runtime: seconds to minutes depending on ensemble size
+- Memory-efficient: O(N·n_bands) for ensemble storage
+
+## ⚙️ Customization
+
+### Adjusting Simulation Parameters
+
+Edit the `if __name__ == "__main__":` block in each script:
+
+```python
+N = 100          # Number of links
+n_bands = 10000  # Ensemble size
+a = 1            # Link length
+force = 0.05     # Applied force
+```
+
+### Temperature Effects
+
+Modify the `RubberBand` class:
+
+```python
+self.kB = 1.38e-23  # Boltzmann constant (J/K)
+self.T = 300        # Temperature (K)
+self.beta = 1 / (self.kB * self.T)
+```
+
+### Output Directory
+
+Results are saved to `out/`. Create this directory if it doesn't exist:
+
+```fish
+mkdir -p out
+```
+
+## 🔬 Physics Insights
+
+This simulation demonstrates several fundamental concepts:
+
+1. **Entropy-Elasticity Connection**: Rubber elasticity arises from entropy maximization, not energy minimization
+2. **Statistical Emergence**: Hooke's law emerges from microscopic randomness
+3. **Importance Sampling**: Shows when and why reweighting fails
+4. **Thermodynamic Limit**: Demonstrates central limit theorem in action
 
 ## 📄 License
 
-This project is licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later). See `LICENSE` for the full text.
+This project is licensed under the terms in the `LICENSE` file.
 
 ## 🤝 Acknowledgments
 
-Inspired by classic treatments of entropic elasticity in statistical physics. Educational use.
+Developed as part of Applied Computational Physics coursework. Thanks to the statistical mechanics and Monte Carlo simulation community for foundational concepts.
+
+## 📚 References
+
+- Hooke's Law and Statistical Mechanics
+- Monte Carlo Methods in Statistical Physics
+- Boltzmann Distribution and Canonical Ensemble
+- Importance Sampling Techniques
 
 ---
 
-Made with Python, NumPy, and Matplotlib.
+*Part of Computational Physics and Statistical Mechanics coursework*
