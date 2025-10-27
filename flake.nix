@@ -24,7 +24,7 @@
         python312Packages.scipy
         python312Packages.notebook
         python312Packages.jupyter
-	      python312Packages.scikit-learn
+        python312Packages.scikit-learn
       ];
     };
   };

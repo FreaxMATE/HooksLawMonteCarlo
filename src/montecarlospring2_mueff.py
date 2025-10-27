@@ -62,7 +62,7 @@ def probability_length_force(N, rubberbands, a=1, force=0.0):
 
     return prob, lengths
 
-def weighted_histogram_plot(lengths, probs_theory, lengths_mc, boltzmann_weights, ax):
+def weighted_histogram_plot(lengths, probs_theory, lengths_mc, boltzmann_weights, n_bands, force, ax):
     """
         Plots the histogram and return the chi^2 error
     """
@@ -71,25 +71,20 @@ def weighted_histogram_plot(lengths, probs_theory, lengths_mc, boltzmann_weights
     edges = [l - dl for l in lengths]
     edges.append(lengths[-1] + dl)
 
-    # print('Lengths: ', lengths)
-    # print('Edges: ', edges)
-
     counts, edges_np = np.histogram(lengths_mc, bins=edges, weights=boltzmann_weights)
     lengths_mc_normed = counts / counts.sum()
 
-    # print('Lengths MC normed: ', lengths_mc_normed)
-    # print('probs_theory: ', probs_theory)
-
-    ax[0].bar(lengths, lengths_mc_normed, width=2*dl, edgecolor='black', alpha=0.5, label='n_bands='+str(n_bands)+', Force f = '+str(force))
-    ax[0].plot(lengths, probs_theory)
-    ax[0].set_ylabel('Pobability')
+    ax[0].step(lengths, lengths_mc_normed, where='mid', label='n_bands='+str(n_bands)+', Force f = '+str(force))
+    ax[0].plot(lengths, probs_theory, label='Theory force f = '+str(force))
+    ax[0].set_ylabel('Probability')
     ax[0].legend()
-    ax[1].plot(lengths, probs_theory/lengths_mc_normed)
+    ax[1].step(lengths, probs_theory/lengths_mc_normed, where='mid')
     ax[1].axhline(y=1, color='k', linewidth=1)
     ax[1].set_ylabel('Ratio Theory/MC')
     ax[1].set_xlabel('Length L/a')
+    ax[1].set_xlim(-70, 70)
 
-    return np.sum((lengths_mc_normed - probs_theory)**2/probs_theory)
+    return np.sum((counts - n_bands*probs_theory)**2/(n_bands*probs_theory))/(len(lengths)-1)
 
 def mu_eff(weights):
     weights_sum = np.sum(weights)
@@ -98,16 +93,15 @@ def mu_eff(weights):
 
 if __name__ == "__main__":
 
-    fig, ax = plt.subplots(2, 1)
+    fig, ax = plt.subplots(2, 1, height_ratios=[2, 1], sharex = True)
 
-
-    # forces = [0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 0.75,0.9, 1.0]
-    forces = np.concatenate((np.linspace(0.0001, 0.5, 250), np.linspace(0.5, 1, 5)))
+    forces = np.concatenate((np.linspace(0.0001, 0.25, 50), np.linspace(0.5, 1, 10)))
     mu_effs = np.zeros(len(forces))
 
+    N = 100
+    n_bands = 10000
+
     for i, force in enumerate(forces):
-        N = 100
-        n_bands = 10000
 
         bands = [RubberBand(N=N) for _ in range(n_bands)]
 
@@ -119,16 +113,16 @@ if __name__ == "__main__":
 
         probs_theory, lengths = probability_length_force(N=N, rubberbands=bands, force=force)
 
-        chi_squared = weighted_histogram_plot(lengths, probs_theory, lengths_mc, boltzmann_weights, ax)
+        chi_squared = weighted_histogram_plot(lengths, probs_theory, lengths_mc, boltzmann_weights, n_bands, force, ax)
         print(chi_squared)
 
-    plt.savefig('out/weighted_histogram_2_large_force_reweigh.png', dpi=300)
+    plt.savefig('out/weighted_histogram_2_large_forces_a_lot.png', dpi=300)
     plt.close()
 
 
     fig, ax = plt.subplots()
-    ax.plot(forces, mu_effs)
-    ax.plot(forces, mu_effs, '.')
+    ax.plot(forces, mu_effs/n_bands)
+    ax.plot(forces, mu_effs/n_bands, '.')
     ax.set_ylabel(r'$\mu_{eff}$')
     ax.set_xlabel('Force $f$')
     plt.savefig('out/weighted_histogram_2_mu_eff.png', dpi=300)

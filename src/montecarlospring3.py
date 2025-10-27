@@ -61,7 +61,7 @@ def probability_length_force(N, rubberbands, a=1, force=0.0):
 
     return prob, lengths
 
-def histogram_plot(lengths, probs_theory, lengths_mc, ax):
+def histogram_plot(lengths, probs_theory, lengths_mc, n_bands, force, ax):
     """
         Plots the histogram and return the chi^2 error
     """
@@ -73,22 +73,23 @@ def histogram_plot(lengths, probs_theory, lengths_mc, ax):
     counts, edges_np = np.histogram(lengths_mc, bins=edges)
     lengths_mc_normed = counts / counts.sum()
 
-    ax[0].bar(lengths, lengths_mc_normed, width=2*dl, edgecolor='black', alpha=0.5, label='n_bands='+str(n_bands)+', Force f = '+str(force))
-    ax[0].plot(lengths, probs_theory)
-    ax[0].set_ylabel('Pobability')
+    ax[0].step(lengths, lengths_mc_normed, where='mid', label='n_bands='+str(n_bands)+', Force f = '+str(force))
+    ax[0].plot(lengths, probs_theory, label='Theory force f = '+str(force))
+    ax[0].set_ylabel('Probability')
     ax[0].legend()
-    ax[1].plot(lengths, probs_theory/lengths_mc_normed)
+    ax[1].step(lengths, probs_theory/lengths_mc_normed, where='mid')
     ax[1].axhline(y=1, color='k', linewidth=1)
     ax[1].set_ylabel('Ratio Theory/MC')
     ax[1].set_xlabel('Length L/a')
+    ax[1].set_xlim(-70, 70)
 
-    return np.sum((lengths_mc_normed - probs_theory)**2/probs_theory)
+    return np.sum((counts - n_bands*probs_theory)**2/(n_bands*probs_theory))/(len(lengths)-1)
 
 if __name__ == "__main__":
 
-    fig, ax = plt.subplots(2, 1)
+    fig, ax = plt.subplots(2, 1, height_ratios=[2, 1], sharex = True)
 
-    forces = np.linspace(0.001, 5, 100)
+    forces = np.linspace(0.001, 5, 30)
 
     lengths_mean = np.zeros(len(forces))
     lengths_std = np.zeros(len(forces))
@@ -116,7 +117,7 @@ if __name__ == "__main__":
         print('Avg length: ', lengths_mean[i])
         print('Probability: ', 0.5*(1 + math.tanh(force)))
 
-        chi_squared = histogram_plot(lengths, probs_theory, lengths_mc, ax)
+        chi_squared = histogram_plot(lengths, probs_theory, lengths_mc, n_bands, force, ax)
 
     plt.savefig('out/histogram_3.png', dpi=300)
 
@@ -132,12 +133,12 @@ if __name__ == "__main__":
     lf_14 = N*a*np.tanh(1*forces_indiscrete*1)
     lf_hooks = N*a**2*forces_indiscrete_begin / (1*1)
 
-    first_range = int(len(forces)/16)
+    first_range = 3
     forces_fit = forces[:first_range]
     lengths_mean_fit = lengths_mean[:first_range]
     coeff, resid, _, _, _ = np.polyfit(forces_fit, lengths_mean_fit, deg=1, full=True)
     lengths_mean_fit_values = coeff[0]*forces_fit + coeff[1]
-    ax.plot(forces_fit, lengths_mean_fit_values, label='Fit')
+    ax.plot(forces_fit, lengths_mean_fit_values, lw=5, color='limegreen', label='Fit')
     print('Fit: ', coeff[0], '* forces + ', coeff[1])
     print(resid)
 

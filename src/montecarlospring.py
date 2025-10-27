@@ -41,11 +41,11 @@ def probability_length(N, a=1):
         lengths[n] = L
     return prob, lengths
 
-def histogram_plot(lengths, probs_theory, lengths_mc):
+def histogram_plot(lengths, probs_theory, lengths_mc, n_bands):
     """
         Plots the histogram and return the chi^2 error
     """
-    fig, ax = plt.subplots(2, 1)
+    fig, ax = plt.subplots(2, 1, height_ratios=[2, 1], sharex=True, figsize=(12, 8))
 
     dl = 1
     edges = [l - dl for l in lengths]
@@ -54,16 +54,20 @@ def histogram_plot(lengths, probs_theory, lengths_mc):
     counts, edges_np = np.histogram(lengths_mc, bins=edges)
     lengths_mc_normed = counts / counts.sum()
 
-    ax[0].bar(lengths, lengths_mc_normed, width=2*dl, color='tab:orange', edgecolor='black', alpha=0.5, label='Length for n_bands='+str(n_bands))
-    ax[0].plot(lengths, probs_theory)
-    ax[0].set_ylabel('Pobability')
-    ax[0].legend()
-    ax[1].plot(lengths, probs_theory/lengths_mc_normed)
-    ax[1].axhline(y=1, color='k', linewidth=1)
-    ax[1].set_ylabel('Ratio Theory/MC')
-    ax[1].set_xlabel('Length L/a')
+    print(counts)
 
-    return np.sum((lengths_mc_normed - probs_theory)**2/probs_theory)
+    ax[0].step(lengths, lengths_mc_normed, where='mid', label='Length for n_bands='+str(n_bands))
+    ax[0].errorbar(lengths, lengths_mc_normed, fmt=',', color='lawngreen', yerr=np.sqrt(counts)/np.sum(counts), capsize=3, label=r'$\sigma = \sqrt{counts}$')
+    ax[0].plot(lengths, probs_theory, label='Theory')
+    ax[0].set_ylabel('Probability')
+    ax[0].legend()
+    ax[1].step(lengths, lengths_mc_normed/probs_theory, where='mid')
+    ax[1].axhline(y=1, color='k', linewidth=1)
+    ax[1].set_ylabel('Ratio MC/Theory')
+    ax[1].set_xlabel('Length L/a')
+    ax[1].set_xlim(-70, 70)
+
+    return np.sum((counts - n_bands*probs_theory)**2/(n_bands*probs_theory))/(len(lengths)-1)
 
 if __name__ == "__main__":
 
@@ -76,7 +80,7 @@ if __name__ == "__main__":
     bands = [RubberBand(N=N) for _ in range(n_bands)]
     lengths_mc = [b.length() for b in bands]
 
-    chi_squared = histogram_plot(lengths, probs_theory, lengths_mc)
+    chi_squared = histogram_plot(lengths, probs_theory, lengths_mc, n_bands)
     print(chi_squared)
 
     plt.savefig('out/histogram_v1.png', dpi=300)
